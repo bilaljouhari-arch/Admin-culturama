@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Admin Panel Culturama - Gestion des événements culturels méditerranéens">
+  <title>Culturama Admin</title>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./css/style.css">
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0/dist/module.js" type="module"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0"></script>
+  
+  <!-- Meta Tags -->
+  <meta property="og:title" content="Culturama Admin">
+  <meta property="og:description" content="Panel d'administration pour la gestion du contenu Culturama">
+  <meta name="theme-color" content="#6366f1">
+</head>
+<body>
+  <div id="app">
+    <!-- Contenu dynamique injecté ici -->
+  </div>
+
+  <!-- Configuration (À adapter avec config.js) -->
+  <script type="module">
+    // ⚠️ IMPORTANT: Avant de lancer l'app, assure-toi que config.js est créé!
+    // 1. Copie config.example.js → config.js
+    // 2. Remplis tes clés Supabase
+    // 3. Ne committe JAMAIS config.js!
+    
+    import { SUPABASE_CONFIG, APP_CONFIG } from './config.js';
+    import './auth.js';
+    import './app.js';
+    import './utils.js';
+  </script>
+
+  <!-- Fallback si config.js est manquant -->
+  <script>
+    window.addEventListener('error', (event) => {
+      if (event.message.includes('config.js')) {
+        document.getElementById('app').innerHTML = `
+          <div style="
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            background: #fee2e2;
+            padding: 2rem;
+            font-family: system-ui;
+          ">
+            <div style="
+              background: white; 
+              padding: 2rem; 
+              border-radius: 0.5rem; 
+              max-width: 600px;
+              box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+            ">
+              <h1 style="color: #dc2626; margin-top: 0;">⚠️ Erreur de configuration</h1>
+              <p style="color: #6b7280; margin: 1rem 0;">
+                Le fichier <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">config.js</code> 
+                est manquant ou inaccessible.
+              </p>
+              <h3 style="color: #374151; margin-top: 1.5rem;">Solution rapide:</h3>
+              <ol style="color: #6b7280;">
+                <li>Copie le fichier <code style="background: #f3f4f6; padding: 0.25rem 0.5rem;">config.example.js</code></li>
+                <li>Renomme-le en <code style="background: #f3f4f6; padding: 0.25rem 0.5rem;">config.js</code></li>
+                <li>Remplis tes clés Supabase (voir README.md)</li>
+                <li>Actualise cette page</li>
+              </ol>
+              <p style="color: #6b7280; margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+                Voir <code style="background: #f3f4f6; padding: 0.25rem 0.5rem;">README.md</code> pour les instructions complètes.
+              </p>
+            </div>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
