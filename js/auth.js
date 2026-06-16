@@ -2,7 +2,7 @@
  * Authentification Supabase sécurisée
  */
 
-import { SUPABASE_CONFIG, APP_CONFIG } from './config.js';
+import { SUPABASE_CONFIG, APP_CONFIG } from '../config.js';
 
 class AuthManager {
   constructor() {

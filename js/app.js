@@ -4,7 +4,7 @@
 
 import { auth } from './auth.js';
 import { showToast, escapeHtml, debounce } from './utils.js';
-import { APP_CONFIG } from './config.js';
+import { APP_CONFIG } from '../config.js';
 
 class AdminApp {
   constructor() {
