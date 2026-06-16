@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate config.js from secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          printf "export const SUPABASE_CONFIG = { url: '%s', anonKey: '%s', sessionTimeout: 1800000, maxLoginAttempts: 5, lockoutDuration: 900000 };\nexport const APP_CONFIG = { appName: 'Culturama Admin', version: '1.0.0', environment: 'production', toastDuration: 3000, enableAutoLogout: true };\nexport const VALIDATION = { email: { maxLength: 255 }, password: { minLength: 8 } };\n" "$SUPABASE_URL" "$SUPABASE_ANON_KEY" > config.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
