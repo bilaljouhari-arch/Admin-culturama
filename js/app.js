@@ -83,6 +83,8 @@ class AdminApp {
             <button class="nav-btn" data-view="articles">📰 Articles</button>
             <button class="nav-btn" data-view="artistes">🎤 Artistes</button>
             <button class="nav-btn" data-view="festivals">🎭 Festivals</button>
+            <button class="nav-btn" data-view="annuaire">📋 Annuaire</button>
+            <button class="nav-btn" data-view="ateliers">🎨 Ateliers</button>
           </nav>
           <div class="sidebar-footer">
             <button id="logout-btn" class="btn btn-secondary btn-block">Déconnexion</button>
@@ -104,11 +106,13 @@ class AdminApp {
     const content = document.getElementById('content');
     content.innerHTML = `<div class="dashboard"><h2>Bienvenue au panel Admin Culturama! 🎭</h2><p>Chargement des statistiques...</p></div>`;
     try {
-      const [ev, ar, art, fest] = await Promise.all([
+      const [ev, ar, art, fest, ann, ate] = await Promise.all([
         this.supabase.from('evenements').select('id', { count: 'exact', head: true }),
         this.supabase.from('articles').select('id', { count: 'exact', head: true }),
         this.supabase.from('artistes').select('id', { count: 'exact', head: true }),
         this.supabase.from('festivals').select('id', { count: 'exact', head: true }),
+        this.supabase.from('annuaire').select('id', { count: 'exact', head: true }),
+        this.supabase.from('ateliers').select('id', { count: 'exact', head: true }),
       ]);
       content.innerHTML = `
         <div class="dashboard">
@@ -119,6 +123,8 @@ class AdminApp {
             <div class="stat-card"><div class="stat-number">${ar.count ?? 0}</div><div class="stat-label">Articles</div></div>
             <div class="stat-card"><div class="stat-number">${art.count ?? 0}</div><div class="stat-label">Artistes</div></div>
             <div class="stat-card"><div class="stat-number">${fest.count ?? 0}</div><div class="stat-label">Festivals</div></div>
+            <div class="stat-card"><div class="stat-number">${ann.count ?? 0}</div><div class="stat-label">Annuaire</div></div>
+            <div class="stat-card"><div class="stat-number">${ate.count ?? 0}</div><div class="stat-label">Ateliers</div></div>
           </div>
         </div>`;
     } catch(e) {
@@ -188,6 +194,37 @@ class AdminApp {
           { name:'date_debut', label:'Date début', type:'datetime-local' },
           { name:'date_fin', label:'Date fin', type:'datetime-local' },
           { name:'lieu', label:'Lieu', type:'text' },
+          { name:'image_url', label:'URL image', type:'url' },
+        ]
+      }); break;
+      case 'annuaire': this.showCRUD('annuaire', {
+        label: 'Contact', labelPlural: 'Annuaire',
+        cols: ['nom','specialite','ville','telephone','email'],
+        colLabels: ['Nom','Spécialité','Ville','Téléphone','Email'],
+        fields: [
+          { name:'nom', label:'Nom', type:'text', required:true },
+          { name:'specialite', label:'Spécialité / Métier', type:'text' },
+          { name:'ville', label:'Ville', type:'text' },
+          { name:'telephone', label:'Téléphone', type:'tel' },
+          { name:'email', label:'Email', type:'email' },
+          { name:'site_web', label:'Site web', type:'url' },
+          { name:'description', label:'Description', type:'textarea' },
+          { name:'photo_url', label:'URL photo', type:'url' },
+        ]
+      }); break;
+      case 'ateliers': this.showCRUD('ateliers', {
+        label: 'Atelier', labelPlural: 'Ateliers',
+        cols: ['titre','intervenant','lieu','date_debut','prix'],
+        colLabels: ['Titre','Intervenant','Lieu','Date','Prix (MAD)'],
+        fields: [
+          { name:'titre', label:'Titre', type:'text', required:true },
+          { name:'intervenant', label:'Intervenant', type:'text' },
+          { name:'description', label:'Description', type:'textarea' },
+          { name:'date_debut', label:'Date début', type:'datetime-local' },
+          { name:'date_fin', label:'Date fin', type:'datetime-local' },
+          { name:'lieu', label:'Lieu', type:'text' },
+          { name:'prix', label:'Prix (MAD)', type:'number' },
+          { name:'places_max', label:'Places max', type:'number' },
           { name:'image_url', label:'URL image', type:'url' },
         ]
       }); break;
@@ -295,60 +332,4 @@ class AdminApp {
                 <label style="display:block;margin-bottom:4px;font-weight:500;color:#444;font-size:14px">${f.label}${f.required ? ' *' : ''}</label>
                 ${f.type === 'textarea'
                   ? `<textarea name="${f.name}" rows="4" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:14px;box-sizing:border-box;resize:vertical">${escapeHtml(row?.[f.name] || '')}</textarea>`
-                  : `<input type="${f.type}" name="${f.name}" value="${f.type==='datetime-local' ? formatDateForInput(row?.[f.name]) : escapeHtml(row?.[f.name] || '')}" ${f.required ? 'required' : ''} style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box">`
-                }
-              </div>`).join('')}
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem">
-              <button type="button" id="modal-cancel" style="padding:10px 20px;border:1px solid #ddd;background:white;border-radius:6px;cursor:pointer">Annuler</button>
-              <button type="submit" style="padding:10px 20px;background:#0d6efd;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500">${isEdit ? 'Mettre à jour' : 'Créer'}</button>
-            </div>
-          </form>
-        </div>
-      </div>`;
-
-    const closeModal = () => { modal.innerHTML = ''; };
-    document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.getElementById('modal-cancel').addEventListener('click', closeModal);
-
-    document.getElementById('modal-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = {};
-      config.fields.forEach(f => {
-        const val = formData.get(f.name);
-        data[f.name] = val === '' ? null : val;
-      });
-
-      try {
-        let error;
-        if (isEdit) {
-          ({ error } = await this.supabase.from(table).update(data).eq('id', row.id));
-        } else {
-          ({ error } = await this.supabase.from(table).insert([data]));
-        }
-        if (error) throw error;
-        showToast(`${config.label} ${isEdit ? 'mis à jour' : 'créé'} ✓`, 'success');
-        closeModal();
-        await this.loadTable(table, config);
-      } catch(err) {
-        showToast('Erreur: ' + err.message, 'error');
-      }
-    });
-  }
-
-  async handleLogout() {
-    try {
-      await auth.logout();
-      showToast('Déconnecté ✓', 'success');
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (err) {
-      showToast('Erreur logout: ' + err.message, 'error');
-    }
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { new AdminApp().init(); });
-} else {
-  new AdminApp().init();
-}
+                  : `<input type="${f.type}" name="${f.name}" value="${f.type==='datetim
